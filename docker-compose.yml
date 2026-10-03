@@ -1,3 +1,21 @@
+x-backend-env: &backend-env
+  DATABASE_URL: postgresql+psycopg2://pdf_app:pdf_app_password@postgres:5432/pdf_workflow
+  AUTH_DATABASE_URL: postgresql+psycopg2://pdf_app_auth:pdf_app_auth_password@postgres:5432/pdf_workflow
+  MIGRATION_DATABASE_URL: postgresql+psycopg2://postgres:postgres@postgres:5432/pdf_workflow
+  JWT_SECRET_KEY: dev-secret-change-me
+  REDIS_URL: redis://redis:6379/0
+  S3_ENDPOINT_URL: http://localstack:4566
+  S3_ACCESS_KEY: test
+  S3_SECRET_KEY: test
+  S3_REGION: us-east-1
+  S3_BUCKET: pdf-workflow
+  SANDBOX_IMAGE: pdf-workflow-sandbox:latest
+  SANDBOX_INTERNAL_TOKEN: dev-sandbox-token-change-me
+  SANDBOX_NETWORK: pdf_workflow_sandbox_net
+  LLM_PROXY_URL: http://backend:8000/internal/llm/complete
+  ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+  ANTHROPIC_MODEL: claude-opus-5
+
 services:
   postgres:
     image: postgres:16
@@ -16,21 +34,63 @@ services:
       timeout: 5s
       retries: 10
 
+  redis:
+    image: redis:7-alpine
+
+  localstack:
+    image: localstack/localstack:3.8
+    environment:
+      SERVICES: s3
+      DEFAULT_REGION: us-east-1
+    ports:
+      - "4566:4566"
+    volumes:
+      - localstack_data:/var/lib/localstack
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:4566/_localstack/health"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
   backend:
     build: ./backend
-    environment:
-      DATABASE_URL: postgresql+psycopg2://pdf_app:pdf_app_password@postgres:5432/pdf_workflow
-      AUTH_DATABASE_URL: postgresql+psycopg2://pdf_app_auth:pdf_app_auth_password@postgres:5432/pdf_workflow
-      MIGRATION_DATABASE_URL: postgresql+psycopg2://postgres:postgres@postgres:5432/pdf_workflow
-      JWT_SECRET_KEY: dev-secret-change-me
+    environment: *backend-env
     depends_on:
       postgres:
+        condition: service_healthy
+      redis:
+        condition: service_started
+      localstack:
         condition: service_healthy
     ports:
       - "8000:8000"
     volumes:
       - ./backend:/app
     command: sh -c "alembic upgrade head && uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload"
+    networks:
+      - default
+      - sandbox_net
+
+  worker:
+    build: ./backend
+    environment:
+      <<: *backend-env
+      # worker 通过 docker.sock 调用的是宿主机 daemon（sibling containers），传给
+      # 它创建的沙箱容器的 volume 源路径必须是宿主机真实路径，而不是 worker 容器内部
+      # 路径 —— 这里就是那个共享目录在宿主机上的绝对路径，两边挂载的是同一个目录。
+      HOST_SANDBOX_TMP_DIR: ${PWD}/backend/.sandbox-tmp
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_started
+      localstack:
+        condition: service_healthy
+    volumes:
+      - ./backend:/app
+      - ./backend/.sandbox-tmp:/sandbox-tmp
+      - /var/run/docker.sock:/var/run/docker.sock
+    command: celery -A app.celery_app worker --loglevel=info --concurrency=2
 
   frontend:
     build: ./frontend
@@ -43,5 +103,11 @@ services:
       - /app/node_modules
     command: npm run dev -- --host
 
+networks:
+  sandbox_net:
+    name: pdf_workflow_sandbox_net
+    internal: true
+
 volumes:
   pg_data:
+  localstack_data:

@@ -4,6 +4,8 @@ import ProtectedRoute from "./components/ProtectedRoute";
 import LoginPage from "./pages/LoginPage";
 import ProjectMembersPage from "./pages/ProjectMembersPage";
 import ProjectsPage from "./pages/ProjectsPage";
+import RunDetailPage from "./pages/RunDetailPage";
+import RunHistoryPage from "./pages/RunHistoryPage";
 import SignupTenantPage from "./pages/SignupTenantPage";
 import UsersPage from "./pages/UsersPage";
 import WorkflowEditorPage from "./pages/WorkflowEditorPage";
@@ -22,6 +24,8 @@ export default function App() {
           <Route path="/projects/:projectId/members" element={<ProjectMembersPage />} />
           <Route path="/projects/:projectId/workflows" element={<WorkflowsPage />} />
           <Route path="/projects/:projectId/workflows/:workflowId" element={<WorkflowEditorPage />} />
+          <Route path="/projects/:projectId/workflows/:workflowId/runs" element={<RunHistoryPage />} />
+          <Route path="/projects/:projectId/workflows/:workflowId/runs/:runId" element={<RunDetailPage />} />
         </Route>
 
         <Route element={<ProtectedRoute adminOnly />}>

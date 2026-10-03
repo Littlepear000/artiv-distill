@@ -4,6 +4,8 @@ backend/**/__pycache__/
 backend/*.pyc
 backend/.venv/
 backend/.env
+backend/.sandbox-tmp/*
+!backend/.sandbox-tmp/.gitkeep
 
 # Node
 frontend/node_modules/

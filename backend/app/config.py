@@ -10,5 +10,28 @@ class Settings(BaseSettings):
     jwt_algorithm: str = "HS256"
     access_token_expire_minutes: int = 480
 
+    redis_url: str = "redis://localhost:6379/0"
+
+    s3_endpoint_url: str = "http://localhost:4566"
+    s3_access_key: str = "test"
+    s3_secret_key: str = "test"
+    s3_region: str = "us-east-1"
+    s3_bucket: str = "pdf-workflow"
+
+    sandbox_image: str = "pdf-workflow-sandbox:latest"
+    sandbox_internal_token: str = "dev-sandbox-token-change-me"
+    sandbox_network: str = "pdf_workflow_sandbox_net"
+    llm_proxy_url: str = "http://backend:8000/internal/llm/complete"
+
+    # worker 容器通过挂载的 docker.sock 调用的是宿主机的 Docker daemon（sibling containers
+    # 模式），所以传给 containers.run() 的 volume 源路径必须是宿主机路径，不能是 worker
+    # 容器自己文件系统里的路径。做法：worker 和宿主机共享同一个目录，worker 这边挂载在
+    # sandbox_tmp_dir，宿主机那边的真实路径由 HOST_SANDBOX_TMP_DIR 告知。
+    sandbox_tmp_dir: str = "/sandbox-tmp"
+    host_sandbox_tmp_dir: str = ""
+
+    anthropic_api_key: str = ""
+    anthropic_model: str = "claude-opus-5"
+
 
 settings = Settings()

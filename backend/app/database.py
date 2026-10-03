@@ -44,6 +44,21 @@ def get_db():
 
 
 @contextmanager
+def tenant_scoped_session(tenant_id: uuid.UUID):
+    """供请求上下文之外使用（如 Celery 任务）：开启一个事务并设置好 RLS 租户上下文。"""
+    db = SessionLocal()
+    try:
+        set_tenant_context(db, tenant_id)
+        yield db
+        db.commit()
+    except Exception:
+        db.rollback()
+        raise
+    finally:
+        db.close()
+
+
+@contextmanager
 def get_auth_session():
     """仅用于登录路径：按 email 查用户，绕过 RLS（见模块说明）。"""
     db = AuthSessionLocal()

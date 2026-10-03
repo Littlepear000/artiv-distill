@@ -170,9 +170,17 @@ export default function WorkflowEditorPage() {
           </Link>
           <h1 className="text-lg font-semibold">{workflow?.name}</h1>
         </div>
-        <button onClick={handleAddNode} className="rounded bg-slate-800 px-4 py-2 text-sm text-white hover:bg-slate-700">
-          + 添加节点
-        </button>
+        <div className="flex gap-3">
+          <Link
+            to={`/projects/${projectId}/workflows/${workflowId}/runs`}
+            className="rounded border border-gray-300 px-4 py-2 text-sm hover:bg-gray-50"
+          >
+            运行 / 历史记录
+          </Link>
+          <button onClick={handleAddNode} className="rounded bg-slate-800 px-4 py-2 text-sm text-white hover:bg-slate-700">
+            + 添加节点
+          </button>
+        </div>
       </div>
 
       <div className="flex flex-1 overflow-hidden">
