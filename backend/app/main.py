@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.api.routes import auth, project_members, projects, users
+from app.api.routes import auth, project_members, projects, users, workflow_nodes, workflows
 
 app = FastAPI(title="PDF Workflow Platform API", version="0.1.0")
 
@@ -17,6 +17,8 @@ app.include_router(auth.router)
 app.include_router(users.router)
 app.include_router(projects.router)
 app.include_router(project_members.router)
+app.include_router(workflows.router)
+app.include_router(workflow_nodes.router)
 
 
 @app.get("/health")

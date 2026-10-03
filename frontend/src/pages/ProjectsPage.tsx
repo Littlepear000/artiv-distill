@@ -49,9 +49,14 @@ export default function ProjectsPage() {
               <div className="font-medium">{p.name}</div>
               {p.description && <div className="text-sm text-gray-500">{p.description}</div>}
             </div>
-            <Link to={`/projects/${p.id}/members`} className="text-sm text-slate-800 underline">
-              管理成员
-            </Link>
+            <div className="flex gap-4">
+              <Link to={`/projects/${p.id}/workflows`} className="text-sm text-slate-800 underline">
+                工作流
+              </Link>
+              <Link to={`/projects/${p.id}/members`} className="text-sm text-slate-800 underline">
+                管理成员
+              </Link>
+            </div>
           </li>
         ))}
         {projects.length === 0 && <p className="text-sm text-gray-500">暂无可见项目</p>}

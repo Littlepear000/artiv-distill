@@ -6,6 +6,8 @@ import ProjectMembersPage from "./pages/ProjectMembersPage";
 import ProjectsPage from "./pages/ProjectsPage";
 import SignupTenantPage from "./pages/SignupTenantPage";
 import UsersPage from "./pages/UsersPage";
+import WorkflowEditorPage from "./pages/WorkflowEditorPage";
+import WorkflowsPage from "./pages/WorkflowsPage";
 
 export default function App() {
   return (
@@ -18,6 +20,8 @@ export default function App() {
         <Route element={<ProtectedRoute />}>
           <Route path="/projects" element={<ProjectsPage />} />
           <Route path="/projects/:projectId/members" element={<ProjectMembersPage />} />
+          <Route path="/projects/:projectId/workflows" element={<WorkflowsPage />} />
+          <Route path="/projects/:projectId/workflows/:workflowId" element={<WorkflowEditorPage />} />
         </Route>
 
         <Route element={<ProtectedRoute adminOnly />}>
