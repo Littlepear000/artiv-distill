@@ -1,0 +1,47 @@
+services:
+  postgres:
+    image: postgres:16
+    environment:
+      POSTGRES_DB: pdf_workflow
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+      - ./db/init:/docker-entrypoint-initdb.d
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  backend:
+    build: ./backend
+    environment:
+      DATABASE_URL: postgresql+psycopg2://pdf_app:pdf_app_password@postgres:5432/pdf_workflow
+      AUTH_DATABASE_URL: postgresql+psycopg2://pdf_app_auth:pdf_app_auth_password@postgres:5432/pdf_workflow
+      MIGRATION_DATABASE_URL: postgresql+psycopg2://postgres:postgres@postgres:5432/pdf_workflow
+      JWT_SECRET_KEY: dev-secret-change-me
+    depends_on:
+      postgres:
+        condition: service_healthy
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./backend:/app
+    command: sh -c "alembic upgrade head && uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload"
+
+  frontend:
+    build: ./frontend
+    environment:
+      VITE_API_BASE_URL: http://localhost:8000
+    ports:
+      - "5173:5173"
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    command: npm run dev -- --host
+
+volumes:
+  pg_data:
