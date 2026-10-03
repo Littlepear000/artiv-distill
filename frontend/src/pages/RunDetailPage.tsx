@@ -85,10 +85,13 @@ export default function RunDetailPage() {
 
   return (
     <div className="mx-auto mt-10 max-w-3xl px-4">
-      <Link to={`/projects/${projectId}/workflows/${workflowId}/runs`} className="text-sm text-slate-600 underline">
+      <Link
+        to={`/projects/${projectId}/workflows/${workflowId}/runs`}
+        className="whitespace-nowrap text-sm text-slate-600 underline"
+      >
         ← 返回运行历史
       </Link>
-      <h1 className="mb-2 mt-2 text-xl font-semibold">
+      <h1 className="page-title mb-2 mt-2 text-xl">
         运行详情 <span className={STATUS_COLOR[run.status]}>（{STATUS_LABEL[run.status]}）</span>
       </h1>
       <p className="mb-6 text-sm text-gray-500">创建于 {new Date(run.created_at).toLocaleString()}</p>
@@ -97,11 +100,14 @@ export default function RunDetailPage() {
         <h2 className="mb-2 text-sm font-medium text-gray-700">输入文件</h2>
         <ul className="flex flex-col gap-1">
           {run.input_files.map((f) => (
-            <li key={f.id} className="flex items-center justify-between text-sm">
+            <li key={f.id} className="flex flex-wrap items-center justify-between gap-2 text-sm">
               <span>
                 {f.original_filename}（{(f.size_bytes / 1024).toFixed(1)} KB）
               </span>
-              <button onClick={() => handleDownload(f.id, f.original_filename)} className="text-slate-800 underline">
+              <button
+                onClick={() => handleDownload(f.id, f.original_filename)}
+                className="whitespace-nowrap text-slate-800 underline"
+              >
                 下载
               </button>
             </li>
@@ -113,11 +119,13 @@ export default function RunDetailPage() {
       <ul className="flex flex-col gap-3">
         {run.node_runs.map((nr) => (
           <li key={nr.id} className="rounded border border-gray-200 p-4">
-            <div className="flex items-center justify-between">
+            <div className="flex flex-wrap items-center justify-between gap-2">
               <span className="font-medium">
                 {nr.order_index + 1}. {nr.node_name}
               </span>
-              <span className={`text-sm font-medium ${STATUS_COLOR[nr.status]}`}>{STATUS_LABEL[nr.status]}</span>
+              <span className={`whitespace-nowrap text-sm font-medium ${STATUS_COLOR[nr.status]}`}>
+                {STATUS_LABEL[nr.status]}
+              </span>
             </div>
             {nr.duration_ms !== null && <p className="mt-1 text-xs text-gray-500">耗时 {nr.duration_ms} ms</p>}
             {nr.error_message && (
@@ -128,11 +136,14 @@ export default function RunDetailPage() {
             {nr.output_files.length > 0 && (
               <ul className="mt-2 flex flex-col gap-1">
                 {nr.output_files.map((f) => (
-                  <li key={f.id} className="flex items-center justify-between text-sm">
+                  <li key={f.id} className="flex flex-wrap items-center justify-between gap-2 text-sm">
                     <span>
                       {f.original_filename}（{(f.size_bytes / 1024).toFixed(1)} KB）
                     </span>
-                    <button onClick={() => handleDownload(f.id, f.original_filename)} className="text-slate-800 underline">
+                    <button
+                      onClick={() => handleDownload(f.id, f.original_filename)}
+                      className="whitespace-nowrap text-slate-800 underline"
+                    >
                       下载
                     </button>
                   </li>

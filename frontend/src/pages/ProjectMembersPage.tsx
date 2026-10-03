@@ -1,5 +1,5 @@
 import { FormEvent, useEffect, useState } from "react";
-import { Link, useParams } from "react-router-dom";
+import { useParams } from "react-router-dom";
 import apiClient from "../api/client";
 
 interface MemberRow {
@@ -57,13 +57,14 @@ export default function ProjectMembersPage() {
 
   return (
     <div className="mx-auto mt-10 max-w-3xl px-4">
-      <Link to="/projects" className="text-sm text-slate-600 underline">
-        ← 返回项目列表
-      </Link>
-      <h1 className="mb-6 mt-2 text-xl font-semibold">项目成员管理</h1>
+      <h1 className="page-title mb-6 mt-2 text-xl">项目成员管理</h1>
 
       <form onSubmit={handleAdd} className="mb-8 flex flex-wrap items-end gap-3 rounded border border-gray-200 p-4">
-        <select value={selectedUserId} onChange={(e) => setSelectedUserId(e.target.value)} className="rounded border border-gray-300 px-3 py-2">
+        <select
+          value={selectedUserId}
+          onChange={(e) => setSelectedUserId(e.target.value)}
+          className="select-chevron rounded border border-gray-300 py-2 pl-3"
+        >
           <option value="">选择租户用户…</option>
           {availableUsers.map((u) => (
             <option key={u.id} value={u.id}>
@@ -71,12 +72,16 @@ export default function ProjectMembersPage() {
             </option>
           ))}
         </select>
-        <select value={role} onChange={(e) => setRole(e.target.value as "owner" | "editor" | "viewer")} className="rounded border border-gray-300 px-3 py-2">
+        <select
+          value={role}
+          onChange={(e) => setRole(e.target.value as "owner" | "editor" | "viewer")}
+          className="select-chevron rounded border border-gray-300 py-2 pl-3"
+        >
           <option value="viewer">Viewer</option>
           <option value="editor">Editor</option>
           <option value="owner">Owner</option>
         </select>
-        <button type="submit" className="rounded bg-slate-800 px-4 py-2 text-white hover:bg-slate-700">
+        <button type="submit" className="whitespace-nowrap rounded bg-slate-800 px-4 py-2 text-white hover:bg-slate-700">
           添加成员
         </button>
       </form>
@@ -95,7 +100,7 @@ export default function ProjectMembersPage() {
               <td className="py-2">{userLabel(m.user_id)}</td>
               <td className="uppercase">{m.project_role}</td>
               <td>
-                <button onClick={() => handleRemove(m.id)} className="text-red-600 hover:underline">
+                <button onClick={() => handleRemove(m.id)} className="whitespace-nowrap text-red-600 hover:underline">
                   移除
                 </button>
               </td>

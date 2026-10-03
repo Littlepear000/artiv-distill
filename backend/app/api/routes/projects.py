@@ -57,6 +57,18 @@ def create_project(
     return project
 
 
+@router.get("/{project_id}", response_model=ProjectOut)
+def get_project(
+    project_id: uuid.UUID,
+    db: Session = Depends(get_db),
+    _: User = Depends(require_project_role(ProjectRole.VIEWER)),
+):
+    project = db.execute(select(Project).where(Project.id == project_id)).scalar_one_or_none()
+    if project is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="项目不存在")
+    return project
+
+
 @router.patch("/{project_id}", response_model=ProjectOut)
 def update_project(
     project_id: uuid.UUID,

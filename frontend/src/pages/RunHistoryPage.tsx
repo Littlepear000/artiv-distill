@@ -72,10 +72,10 @@ export default function RunHistoryPage() {
 
   return (
     <div className="mx-auto mt-10 max-w-3xl px-4">
-      <Link to={`/projects/${projectId}/workflows/${workflowId}`} className="text-sm text-slate-600 underline">
+      <Link to={`/projects/${projectId}/workflows/${workflowId}`} className="whitespace-nowrap text-sm text-slate-600 underline">
         ← 返回工作流编辑器
       </Link>
-      <h1 className="mb-6 mt-2 text-xl font-semibold">运行历史</h1>
+      <h1 className="page-title mb-6 mt-2 text-xl">运行历史</h1>
 
       <form onSubmit={handleSubmit} className="mb-8 rounded border border-gray-200 p-4">
         <label className="mb-2 block text-sm font-medium text-gray-700">上传 PDF 文件并触发一次运行</label>
@@ -84,7 +84,7 @@ export default function RunHistoryPage() {
           <button
             type="submit"
             disabled={uploading || !files || files.length === 0}
-            className="rounded bg-slate-800 px-4 py-2 text-sm text-white hover:bg-slate-700 disabled:opacity-50"
+            className="whitespace-nowrap rounded bg-slate-800 px-4 py-2 text-sm text-white hover:bg-slate-700 disabled:opacity-50"
           >
             {uploading ? "上传中…" : "上传并运行"}
           </button>
@@ -113,7 +113,7 @@ export default function RunHistoryPage() {
                 <td>{new Date(r.created_at).toLocaleString()}</td>
                 <td>{durationMs !== null ? `${(durationMs / 1000).toFixed(1)}s` : "-"}</td>
                 <td>
-                  <Link to={`${basePath}/${r.id}`} className="text-slate-800 underline">
+                  <Link to={`${basePath}/${r.id}`} className="whitespace-nowrap text-slate-800 underline">
                     查看详情
                   </Link>
                 </td>

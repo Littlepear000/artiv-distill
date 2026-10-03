@@ -1,3 +1,35 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* 标题字体栈：拉丁 Funnel Sans + 中文阿里巴巴普惠体 3 Heavy，仅用于标题，不进正文 */
+@font-face {
+  font-family: "Alibaba PuHuiTi 3";
+  src: url("https://cdn.jsdelivr.net/npm/alibabapuhuiti-3-105-heavy@1.0.0/AlibabaPuHuiTi-3-105-Heavy.woff2")
+    format("woff2");
+  font-weight: 900;
+  font-style: normal;
+  font-display: swap;
+}
+
+:root {
+  --title-font: "Funnel Sans", "Alibaba PuHuiTi 3", "HarmonyOS Sans SC", "PingFang SC", "Microsoft YaHei UI",
+    "Microsoft YaHei", system-ui, sans-serif;
+}
+
+.page-title {
+  font-family: var(--title-font);
+  font-weight: 700;
+}
+
+/* 下拉框去原生箭头，换成自绘 chevron，外观和旁边的输入框/按钮保持统一 */
+.select-chevron {
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%236b7280' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  background-size: 12px;
+  padding-right: 34px;
+}

@@ -24,7 +24,7 @@ export default function SignupTenantPage() {
 
   return (
     <div className="mx-auto mt-16 max-w-sm rounded-lg border border-gray-200 p-8 shadow-sm">
-      <h1 className="mb-6 text-xl font-semibold">创建新租户</h1>
+      <h1 className="page-title mb-6 text-xl">创建新租户</h1>
       <form onSubmit={handleSubmit} className="flex flex-col gap-4">
         <input
           placeholder="租户/机构名称"
@@ -57,7 +57,7 @@ export default function SignupTenantPage() {
           required
         />
         {error && <p className="text-sm text-red-600">{error}</p>}
-        <button type="submit" className="rounded bg-slate-800 px-4 py-2 text-white hover:bg-slate-700">
+        <button type="submit" className="whitespace-nowrap rounded bg-slate-800 px-4 py-2 text-white hover:bg-slate-700">
           创建租户并登录
         </button>
       </form>

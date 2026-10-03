@@ -7,23 +7,23 @@ export default function NavBar() {
   if (!currentUser) return null;
 
   return (
-    <nav className="flex items-center justify-between bg-slate-800 px-6 py-3 text-white">
-      <div className="flex items-center gap-6">
-        <span className="font-semibold">PDF Workflow Platform</span>
-        <Link to="/projects" className="text-sm hover:underline">
+    <nav className="flex flex-wrap items-center justify-between gap-3 bg-slate-800 px-6 py-3 text-white">
+      <div className="flex flex-wrap items-center gap-6">
+        <span className="whitespace-nowrap font-semibold">PDF Workflow Platform</span>
+        <Link to="/projects" className="whitespace-nowrap text-sm hover:underline">
           项目
         </Link>
         {currentUser.tenant_role === "admin" && (
-          <Link to="/users" className="text-sm hover:underline">
+          <Link to="/users" className="whitespace-nowrap text-sm hover:underline">
             租户用户管理
           </Link>
         )}
       </div>
-      <div className="flex items-center gap-4 text-sm">
-        <span>
+      <div className="flex flex-wrap items-center gap-4 text-sm">
+        <span className="whitespace-nowrap">
           {currentUser.name}（{currentUser.tenant_role === "admin" ? "租户管理员" : "成员"}）
         </span>
-        <button onClick={logout} className="rounded bg-slate-600 px-3 py-1 hover:bg-slate-500">
+        <button onClick={logout} className="whitespace-nowrap rounded bg-slate-600 px-3 py-1 hover:bg-slate-500">
           退出登录
         </button>
       </div>

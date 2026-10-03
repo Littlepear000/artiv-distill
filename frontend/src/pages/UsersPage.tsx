@@ -48,17 +48,21 @@ export default function UsersPage() {
 
   return (
     <div className="mx-auto mt-10 max-w-3xl px-4">
-      <h1 className="mb-6 text-xl font-semibold">租户用户管理</h1>
+      <h1 className="page-title mb-6 text-xl">租户用户管理</h1>
 
       <form onSubmit={handleCreate} className="mb-8 flex flex-wrap items-end gap-3 rounded border border-gray-200 p-4">
         <input placeholder="姓名" value={name} onChange={(e) => setName(e.target.value)} className="rounded border border-gray-300 px-3 py-2" required />
         <input type="email" placeholder="邮箱" value={email} onChange={(e) => setEmail(e.target.value)} className="rounded border border-gray-300 px-3 py-2" required />
         <input type="password" placeholder="初始密码" value={password} onChange={(e) => setPassword(e.target.value)} className="rounded border border-gray-300 px-3 py-2" required />
-        <select value={role} onChange={(e) => setRole(e.target.value as "admin" | "member")} className="rounded border border-gray-300 px-3 py-2">
+        <select
+          value={role}
+          onChange={(e) => setRole(e.target.value as "admin" | "member")}
+          className="select-chevron rounded border border-gray-300 py-2 pl-3"
+        >
           <option value="member">普通成员</option>
           <option value="admin">租户管理员</option>
         </select>
-        <button type="submit" className="rounded bg-slate-800 px-4 py-2 text-white hover:bg-slate-700">
+        <button type="submit" className="whitespace-nowrap rounded bg-slate-800 px-4 py-2 text-white hover:bg-slate-700">
           新增用户
         </button>
       </form>
@@ -83,7 +87,7 @@ export default function UsersPage() {
               <td>{u.is_active ? "启用" : "已禁用"}</td>
               <td>
                 {u.is_active && (
-                  <button onClick={() => handleDeactivate(u.id)} className="text-red-600 hover:underline">
+                  <button onClick={() => handleDeactivate(u.id)} className="whitespace-nowrap text-red-600 hover:underline">
                     禁用
                   </button>
                 )}

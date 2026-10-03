@@ -22,7 +22,7 @@ export default function LoginPage() {
 
   return (
     <div className="mx-auto mt-24 max-w-sm rounded-lg border border-gray-200 p-8 shadow-sm">
-      <h1 className="mb-6 text-xl font-semibold">登录</h1>
+      <h1 className="page-title mb-6 text-xl">登录</h1>
       <form onSubmit={handleSubmit} className="flex flex-col gap-4">
         <input
           type="email"
@@ -41,13 +41,13 @@ export default function LoginPage() {
           required
         />
         {error && <p className="text-sm text-red-600">{error}</p>}
-        <button type="submit" className="rounded bg-slate-800 px-4 py-2 text-white hover:bg-slate-700">
+        <button type="submit" className="whitespace-nowrap rounded bg-slate-800 px-4 py-2 text-white hover:bg-slate-700">
           登录
         </button>
       </form>
       <p className="mt-4 text-sm text-gray-500">
         还没有租户？{" "}
-        <Link to="/signup-tenant" className="text-slate-800 underline">
+        <Link to="/signup-tenant" className="whitespace-nowrap text-slate-800 underline">
           创建新租户
         </Link>
       </p>
