@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import apiClient from "../api/client";
+import { useI18n } from "../i18n";
 import WorkflowDiagramView from "../components/WorkflowDiagramView";
 import WorkflowFormEditor from "../components/WorkflowFormEditor";
 
@@ -11,6 +12,10 @@ interface WorkflowNodeData {
   prompt: string;
   order_index: number;
   position: { x: number; y: number };
+  code_asset_id: string | null;
+  code_asset_version: number | null;
+  prompt_asset_id: string | null;
+  prompt_asset_version: number | null;
 }
 
 interface WorkflowDetail {
@@ -26,6 +31,7 @@ interface RunSummary {
 interface FileInfo {
   id: string;
   original_filename: string;
+  content_type: string;
   size_bytes: number;
 }
 
@@ -45,6 +51,7 @@ interface RunDetail {
 type Tab = "edit" | "diagram";
 
 export default function WorkflowEditorPage() {
+  const { t } = useI18n();
   const { projectId, workflowId } = useParams<{ projectId: string; workflowId: string }>();
   const navigate = useNavigate();
   const [tab, setTab] = useState<Tab>("edit");
@@ -95,7 +102,7 @@ export default function WorkflowEditorPage() {
   }
 
   async function handleCreateWorkflow() {
-    const name = window.prompt("新工作流名称", "新工作流");
+    const name = window.prompt(t("New workflow name"), t("New workflow"));
     if (!name) return;
     const response = await apiClient.post<WorkflowDetail>(`/projects/${projectId}/workflows`, { name });
     navigate(`/projects/${projectId}/workflows/${response.data.id}`);
@@ -134,16 +141,16 @@ export default function WorkflowEditorPage() {
           <button
             onClick={handleCreateWorkflow}
             className="whitespace-nowrap rounded border border-gray-300 px-2 py-1.5 text-sm hover:bg-gray-50"
-            title="新建工作流"
+            title={t("New workflow")}
           >
-            ＋ 新建工作流
+            ＋ {t("New workflow")}
           </button>
         </div>
         <Link
           to={`${basePath}/runs`}
           className="whitespace-nowrap rounded border border-gray-300 px-4 py-2 text-sm hover:bg-gray-50"
         >
-          历史记录
+          {t("History")}
         </Link>
       </div>
 
@@ -154,7 +161,7 @@ export default function WorkflowEditorPage() {
             tab === "edit" ? "border-slate-800 font-medium text-slate-800" : "border-transparent text-gray-500 hover:text-gray-700"
           }`}
         >
-          编辑
+          {t("Edit")}
         </button>
         <button
           onClick={() => setTab("diagram")}
@@ -162,7 +169,7 @@ export default function WorkflowEditorPage() {
             tab === "diagram" ? "border-slate-800 font-medium text-slate-800" : "border-transparent text-gray-500 hover:text-gray-700"
           }`}
         >
-          流程图
+          {t("Diagram")}
         </button>
       </div>
 
@@ -171,6 +178,7 @@ export default function WorkflowEditorPage() {
         // 不额外套 flex-1/overflow-hidden，避免嵌套高度链算错导致卷不动（历史上踩过这个坑）
         <WorkflowFormEditor
           basePath={basePath}
+          projectId={projectId!}
           nodes={nodes}
           latestRun={latestRun}
           onReload={loadAll}
@@ -179,7 +187,13 @@ export default function WorkflowEditorPage() {
       ) : (
         // 流程图里的 React Flow 画布必须有明确的像素高度才能正常渲染，这里才需要 flex-1 撑满剩余空间
         <div className="flex-1 overflow-hidden">
-          <WorkflowDiagramView basePath={basePath} nodes={nodes} latestRun={latestRun} onDownload={handleDownload} />
+          <WorkflowDiagramView
+            basePath={basePath}
+            projectId={projectId!}
+            nodes={nodes}
+            latestRun={latestRun}
+            onDownload={handleDownload}
+          />
         </div>
       )}
     </div>

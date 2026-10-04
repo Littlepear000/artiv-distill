@@ -29,7 +29,7 @@ def main() -> int:
             exec(compile(source, "node_code.py", "exec"), namespace)
             run_fn = namespace.get("run")
             if run_fn is None:
-                raise RuntimeError("节点 Code 必须定义一个 run(sdk) 函数")
+                raise RuntimeError("Node Code must define a run(sdk) function")
             run_fn(sdk)
         else:
             sdk.run_default_behavior()

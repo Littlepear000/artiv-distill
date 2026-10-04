@@ -17,6 +17,10 @@ class Settings(BaseSettings):
     s3_secret_key: str = "test"
     s3_region: str = "us-east-1"
     s3_bucket: str = "pdf-workflow"
+    # 本地 LocalStack/MinIO 用 path；阿里云 OSS 必须用 virtual
+    s3_addressing_style: str = "path"
+    # 预签名下载链接给浏览器用，必须是公网可达的地址；留空则沿用 s3_endpoint_url（OSS 内网地址浏览器访问不了，需填公网地址）
+    s3_public_endpoint_url: str = ""
 
     sandbox_image: str = "pdf-workflow-sandbox:latest"
     sandbox_internal_token: str = "dev-sandbox-token-change-me"
@@ -32,6 +36,10 @@ class Settings(BaseSettings):
 
     anthropic_api_key: str = ""
     anthropic_model: str = "claude-opus-5"
+
+    deepseek_api_key: str = ""
+    deepseek_base_url: str = "https://api.deepseek.com"
+    deepseek_model: str = "deepseek-chat"
 
 
 settings = Settings()

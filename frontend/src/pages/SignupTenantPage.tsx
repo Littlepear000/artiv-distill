@@ -1,8 +1,10 @@
 import { FormEvent, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
+import { useI18n } from "../i18n";
 
 export default function SignupTenantPage() {
+  const { t } = useI18n();
   const { signupTenant } = useAuth();
   const navigate = useNavigate();
   const [tenantName, setTenantName] = useState("");
@@ -18,23 +20,23 @@ export default function SignupTenantPage() {
       await signupTenant(tenantName, adminName, adminEmail, adminPassword);
       navigate("/projects");
     } catch {
-      setError("创建失败，请检查邮箱是否已被使用");
+      setError(t("Creation failed. Check whether the email is already in use"));
     }
   }
 
   return (
     <div className="mx-auto mt-16 max-w-sm rounded-lg border border-gray-200 p-8 shadow-sm">
-      <h1 className="page-title mb-6 text-xl">创建新租户</h1>
+      <h1 className="page-title mb-6 text-xl">{t("Create a new tenant")}</h1>
       <form onSubmit={handleSubmit} className="flex flex-col gap-4">
         <input
-          placeholder="租户/机构名称"
+          placeholder={t("Tenant / organization name")}
           value={tenantName}
           onChange={(e) => setTenantName(e.target.value)}
           className="rounded border border-gray-300 px-3 py-2"
           required
         />
         <input
-          placeholder="管理员姓名"
+          placeholder={t("Admin name")}
           value={adminName}
           onChange={(e) => setAdminName(e.target.value)}
           className="rounded border border-gray-300 px-3 py-2"
@@ -42,7 +44,7 @@ export default function SignupTenantPage() {
         />
         <input
           type="email"
-          placeholder="管理员邮箱"
+          placeholder={t("Admin email")}
           value={adminEmail}
           onChange={(e) => setAdminEmail(e.target.value)}
           className="rounded border border-gray-300 px-3 py-2"
@@ -50,7 +52,7 @@ export default function SignupTenantPage() {
         />
         <input
           type="password"
-          placeholder="密码（至少8位）"
+          placeholder={t("Password (at least 8 characters)")}
           value={adminPassword}
           onChange={(e) => setAdminPassword(e.target.value)}
           className="rounded border border-gray-300 px-3 py-2"
@@ -58,7 +60,7 @@ export default function SignupTenantPage() {
         />
         {error && <p className="text-sm text-red-600">{error}</p>}
         <button type="submit" className="whitespace-nowrap rounded bg-slate-800 px-4 py-2 text-white hover:bg-slate-700">
-          创建租户并登录
+          {t("Create tenant and log in")}
         </button>
       </form>
     </div>

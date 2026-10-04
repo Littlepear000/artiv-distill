@@ -54,7 +54,7 @@ def get_workflow(
         select(Workflow).where(Workflow.id == workflow_id, Workflow.project_id == project_id)
     ).scalar_one_or_none()
     if workflow is None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="工作流不存在")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Workflow not found")
     return workflow
 
 
@@ -70,7 +70,7 @@ def update_workflow(
         select(Workflow).where(Workflow.id == workflow_id, Workflow.project_id == project_id)
     ).scalar_one_or_none()
     if workflow is None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="工作流不存在")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Workflow not found")
 
     for field, value in payload.model_dump(exclude_unset=True).items():
         setattr(workflow, field, value)
@@ -89,5 +89,5 @@ def delete_workflow(
         select(Workflow).where(Workflow.id == workflow_id, Workflow.project_id == project_id)
     ).scalar_one_or_none()
     if workflow is None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="工作流不存在")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Workflow not found")
     db.delete(workflow)

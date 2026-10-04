@@ -21,5 +21,7 @@ class ProjectMemberOut(BaseModel):
     user_id: uuid.UUID
     project_role: ProjectRole
     created_at: datetime
+    user_name: str | None = None
+    user_email: str | None = None
 
     model_config = {"from_attributes": True}

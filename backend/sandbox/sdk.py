@@ -53,12 +53,12 @@ class SandboxSDK:
             with open(path, "w", encoding="utf-8") as f:
                 f.write(data)
         else:
-            raise TypeError("write_output 只接受 bytes 或 str")
+            raise TypeError("write_output only accepts bytes or str")
 
     def call_llm(self, prompt: str | None = None, content: str = "") -> str:
         effective_prompt = prompt if prompt is not None else self.prompt
         if not effective_prompt:
-            raise ValueError("call_llm 需要一个 prompt（节点未配置 Prompt，且调用时也未显式传入）")
+            raise ValueError("call_llm requires a prompt (the node has no Prompt configured and none was passed explicitly)")
 
         response = httpx.post(
             self.llm_proxy_url,

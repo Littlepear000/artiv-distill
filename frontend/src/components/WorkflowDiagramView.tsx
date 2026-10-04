@@ -1,10 +1,12 @@
-import Editor from "@monaco-editor/react";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import ReactFlow, { Background, Controls, Edge, Node, NodeMouseHandler } from "reactflow";
 import "reactflow/dist/style.css";
+import apiClient from "../api/client";
 import PdfInputNodeCard, { PdfInputNodeCardData } from "./PdfInputNodeCard";
 import WorkflowNodeCard, { WorkflowNodeCardData } from "./WorkflowNodeCard";
+import { fileTypeLabel } from "../utils/fileType";
+import { useI18n } from "../i18n";
 
 const INPUT_NODE_ID = "__input__";
 const nodeTypes = { workflowNode: WorkflowNodeCard, pdfInputNode: PdfInputNodeCard };
@@ -15,11 +17,21 @@ interface WorkflowNodeData {
   code: string;
   prompt: string;
   order_index: number;
+  code_asset_id: string | null;
+  code_asset_version: number | null;
+  prompt_asset_id: string | null;
+  prompt_asset_version: number | null;
+}
+
+interface AssetOption {
+  id: string;
+  name: string;
 }
 
 interface FileInfo {
   id: string;
   original_filename: string;
+  content_type: string;
   size_bytes: number;
 }
 
@@ -38,6 +50,7 @@ interface RunDetail {
 
 interface Props {
   basePath: string;
+  projectId: string;
   nodes: WorkflowNodeData[];
   latestRun: RunDetail | null;
   onDownload: (fileId: string, filename: string) => void;
@@ -48,10 +61,25 @@ interface Props {
  * 编辑节点 Code/Prompt、增删节点、上传新 PDF 运行，都在「编辑」tab 里做；
  * 这里只负责"把工作流的样子和最近一次跑的结果，一眼看明白"。
  */
-export default function WorkflowDiagramView({ basePath, nodes, latestRun, onDownload }: Props) {
+export default function WorkflowDiagramView({ basePath, projectId, nodes, latestRun, onDownload }: Props) {
+  const { t } = useI18n();
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [codeAssets, setCodeAssets] = useState<AssetOption[]>([]);
+  const [promptAssets, setPromptAssets] = useState<AssetOption[]>([]);
+
+  useEffect(() => {
+    apiClient.get<AssetOption[]>(`/projects/${projectId}/assets`, { params: { kind: "code" } }).then((r) => setCodeAssets(r.data));
+    apiClient.get<AssetOption[]>(`/projects/${projectId}/assets`, { params: { kind: "prompt" } }).then((r) => setPromptAssets(r.data));
+  }, [projectId]);
 
   const sortedNodes = useMemo(() => [...nodes].sort((a, b) => a.order_index - b.order_index), [nodes]);
+
+  function assetLabel(assets: AssetOption[], assetId: string | null, version: number | null): string | undefined {
+    if (!assetId) return undefined;
+    const asset = assets.find((a) => a.id === assetId);
+    const name = asset?.name ?? t("(deleted asset)");
+    return version !== null ? `${name} v${version}` : name;
+  }
 
   function runStatusFor(nodeId: string): RunNodeStatus | undefined {
     return latestRun?.node_runs.find((nr) => nr.node_id === nodeId);
@@ -83,13 +111,15 @@ export default function WorkflowDiagramView({ basePath, nodes, latestRun, onDown
           prompt: n.prompt,
           selected: n.id === selectedId,
           runStatus: runStatus?.status,
-          outputCount: runStatus?.output_files.length,
+          outputFileNames: runStatus?.output_files.map((f) => f.original_filename),
+          codeAssetLabel: assetLabel(codeAssets, n.code_asset_id, n.code_asset_version),
+          promptAssetLabel: assetLabel(promptAssets, n.prompt_asset_id, n.prompt_asset_version),
         },
       };
     });
     return [inputNode, ...processingNodes];
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [sortedNodes, selectedId, latestRun]);
+  }, [sortedNodes, selectedId, latestRun, codeAssets, promptAssets, t]);
 
   const flowEdges: Edge[] = useMemo(() => {
     const edges: Edge[] = [];
@@ -119,29 +149,33 @@ export default function WorkflowDiagramView({ basePath, nodes, latestRun, onDown
 
       {isInputSelected && (
         <div className="flex w-[360px] flex-col gap-3 overflow-y-auto border-l border-gray-200 bg-white p-4">
-          <h2 className="font-medium">📥 PDF 输入</h2>
-          <p className="text-sm text-gray-500">所有工作流统一从这里开始。想上传新一批 PDF 触发运行，请切到「编辑」tab。</p>
+          <h2 className="font-medium">📥 {t("PDF input")}</h2>
+          <p className="text-sm text-gray-500">{t("Every workflow starts here. To upload a new batch of PDFs and trigger a run, switch to the Edit tab.")}</p>
           {latestRun ? (
             <div>
-              <div className="mb-1 text-sm font-medium text-gray-700">最近一次运行的输入文件</div>
+              <div className="mb-1 text-sm font-medium text-gray-700">{t("Input files of the latest run")}</div>
               <ul className="flex flex-col gap-1">
                 {latestRun.input_files.map((f) => (
                   <li key={f.id} className="flex flex-wrap items-center justify-between gap-2 text-sm">
                     <span>
-                      {f.original_filename}（{(f.size_bytes / 1024).toFixed(1)} KB）
+                      {f.original_filename}{" "}
+                      <span className="whitespace-nowrap rounded bg-gray-200 px-1 py-0.5 font-mono text-[10px] text-gray-600">
+                        {fileTypeLabel(f.content_type, f.original_filename, t)}
+                      </span>{" "}
+                      {t("({size} KB)", { size: (f.size_bytes / 1024).toFixed(1) })}
                     </span>
                     <button onClick={() => onDownload(f.id, f.original_filename)} className="whitespace-nowrap text-slate-800 underline">
-                      下载
+                      {t("Download")}
                     </button>
                   </li>
                 ))}
               </ul>
               <Link to={`${basePath}/runs/${latestRun.id}`} className="mt-3 inline-block whitespace-nowrap text-sm text-slate-800 underline">
-                查看完整运行详情 →
+                {t("View full run details →")}
               </Link>
             </div>
           ) : (
-            <p className="text-sm text-gray-400">还没有运行过</p>
+            <p className="text-sm text-gray-400">{t("No runs yet")}</p>
           )}
         </div>
       )}
@@ -151,48 +185,63 @@ export default function WorkflowDiagramView({ basePath, nodes, latestRun, onDown
           <h2 className="font-medium">
             {selectedNode.order_index + 1}. {selectedNode.name}
           </h2>
-          <p className="text-sm text-gray-500">这里只看结果，不能编辑。想改 Code/Prompt 请切到「编辑」tab。</p>
+          <p className="text-sm text-gray-500">{t("This view is read-only. To change Code/Prompt, switch to the Edit tab.")}</p>
 
-          {selectedNode.code.trim() && (
-            <div>
-              <div className="mb-1 text-sm font-medium text-gray-700">Code 预览（只读）</div>
-              <Editor
-                height="200px"
-                language="python"
-                value={selectedNode.code}
-                options={{ readOnly: true, minimap: { enabled: false }, fontSize: 12, domReadOnly: true }}
-              />
+          {(assetLabel(codeAssets, selectedNode.code_asset_id, selectedNode.code_asset_version) ||
+            assetLabel(promptAssets, selectedNode.prompt_asset_id, selectedNode.prompt_asset_version)) && (
+            <div className="rounded bg-blue-50 p-2 text-xs text-blue-700">
+              {assetLabel(codeAssets, selectedNode.code_asset_id, selectedNode.code_asset_version) && (
+                <div>📎 {t("Code from asset library: {name}", { name: assetLabel(codeAssets, selectedNode.code_asset_id, selectedNode.code_asset_version) ?? "" })}</div>
+              )}
+              {assetLabel(promptAssets, selectedNode.prompt_asset_id, selectedNode.prompt_asset_version) && (
+                <div>
+                  📎 {t("Prompt from asset library: {name}", { name: assetLabel(promptAssets, selectedNode.prompt_asset_id, selectedNode.prompt_asset_version) ?? "" })}
+                </div>
+              )}
             </div>
+          )}
+
+          {selectedNode.code_asset_id && (
+            <Link
+              to={`/projects/${projectId}/assets/${selectedNode.code_asset_id}`}
+              className="inline-block w-fit whitespace-nowrap text-sm text-slate-800 underline"
+            >
+              {t("View full code in the Code library →")}
+            </Link>
           )}
 
           {selectedRunStatus ? (
             <div>
-              <div className="mb-1 text-sm font-medium text-gray-700">最近一次运行产出</div>
-              <p className="mb-2 text-sm text-gray-500">状态：{selectedRunStatus.status}</p>
+              <div className="mb-1 text-sm font-medium text-gray-700">{t("Latest run output")}</div>
+              <p className="mb-2 text-sm text-gray-500">{t("Status: {status}", { status: selectedRunStatus.status })}</p>
               {selectedRunStatus.output_files.length > 0 ? (
                 <ul className="flex flex-col gap-1">
                   {selectedRunStatus.output_files.map((f) => (
                     <li key={f.id} className="flex flex-wrap items-center justify-between gap-2 text-sm">
                       <span>
-                        {f.original_filename}（{(f.size_bytes / 1024).toFixed(1)} KB）
+                        {f.original_filename}{" "}
+                        <span className="whitespace-nowrap rounded bg-gray-200 px-1 py-0.5 font-mono text-[10px] text-gray-600">
+                          {fileTypeLabel(f.content_type, f.original_filename, t)}
+                        </span>{" "}
+                        {t("({size} KB)", { size: (f.size_bytes / 1024).toFixed(1) })}
                       </span>
                       <button onClick={() => onDownload(f.id, f.original_filename)} className="whitespace-nowrap text-slate-800 underline">
-                        下载
+                        {t("Download")}
                       </button>
                     </li>
                   ))}
                 </ul>
               ) : (
-                <p className="text-sm text-gray-400">这次运行没有产出文件</p>
+                <p className="text-sm text-gray-400">{t("This run produced no files")}</p>
               )}
               {latestRun && (
                 <Link to={`${basePath}/runs/${latestRun.id}`} className="mt-3 inline-block whitespace-nowrap text-sm text-slate-800 underline">
-                  查看完整运行详情 →
+                  {t("View full run details →")}
                 </Link>
               )}
             </div>
           ) : (
-            <p className="text-sm text-gray-400">还没有运行过，看不到产出</p>
+            <p className="text-sm text-gray-400">{t("No runs yet, so there is no output to show")}</p>
           )}
         </div>
       )}

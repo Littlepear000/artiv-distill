@@ -27,7 +27,7 @@ def create_user(
 ):
     existing = db.execute(select(User).where(User.email == payload.email)).scalar_one_or_none()
     if existing is not None:
-        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="该邮箱已被注册")
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="This email is already registered")
 
     user = User(
         tenant_id=current_admin.tenant_id,
@@ -50,7 +50,7 @@ def update_user(
 ):
     user = db.execute(select(User).where(User.id == user_id)).scalar_one_or_none()
     if user is None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="用户不存在")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
 
     for field, value in payload.model_dump(exclude_unset=True).items():
         setattr(user, field, value)
@@ -67,6 +67,6 @@ def deactivate_user(
     """软删除：禁用账号而非物理删除，保留历史任务/成员记录的可追溯性。"""
     user = db.execute(select(User).where(User.id == user_id)).scalar_one_or_none()
     if user is None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="用户不存在")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
     user.is_active = False
     db.flush()

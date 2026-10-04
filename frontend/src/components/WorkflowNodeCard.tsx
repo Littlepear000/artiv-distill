@@ -1,4 +1,5 @@
 import { Handle, Position } from "reactflow";
+import { useI18n } from "../i18n";
 
 export interface WorkflowNodeCardData {
   label: string;
@@ -7,7 +8,9 @@ export interface WorkflowNodeCardData {
   prompt: string;
   selected: boolean;
   runStatus?: "pending" | "running" | "success" | "failed";
-  outputCount?: number;
+  outputFileNames?: string[];
+  codeAssetLabel?: string;
+  promptAssetLabel?: string;
 }
 
 const RUN_STATUS_DOT: Record<string, string> = {
@@ -22,28 +25,29 @@ function sanitizeFilename(name: string): string {
   return trimmed.replace(/\s+/g, "_").replace(/[\\/:*?"<>|]/g, "");
 }
 
-export function deriveFileBadge(name: string, code: string, prompt: string): { icon: string; label: string } {
+export function deriveFileBadge(name: string, code: string, prompt: string, t: (s: string) => string = (s) => s): { icon: string; label: string } {
   if (code.trim()) {
     return { icon: "📄", label: `${sanitizeFilename(name)}.py` };
   }
   if (prompt.trim()) {
-    return { icon: "✨", label: "AI 摘要（默认行为）" };
+    return { icon: "✨", label: t("AI summary (default behavior)") };
   }
-  return { icon: "↷", label: "透传节点" };
+  return { icon: "↷", label: t("Pass-through node") };
 }
 
 export default function WorkflowNodeCard({ data }: { data: WorkflowNodeCardData }) {
-  const fileBadge = deriveFileBadge(data.label, data.code, data.prompt);
+  const { t } = useI18n();
+  const fileBadge = deriveFileBadge(data.label, data.code, data.prompt, t);
 
   return (
     <div
-      className={`min-w-[180px] rounded-lg border-2 bg-white px-4 py-3 shadow-sm ${
+      className={`min-w-[200px] max-w-[260px] rounded-lg border-2 bg-white px-4 py-3 shadow-sm ${
         data.selected ? "border-slate-800" : "border-gray-300"
       }`}
     >
       <Handle type="target" position={Position.Left} />
       <div className="flex items-center justify-between gap-2">
-        <span className="text-xs text-gray-400">节点 {data.order + 1}</span>
+        <span className="text-xs text-gray-400">{t("Node {n}", { n: data.order + 1 })}</span>
         {data.runStatus && (
           <span className={`inline-block h-1.5 w-1.5 shrink-0 rounded-full ${RUN_STATUS_DOT[data.runStatus]}`} />
         )}
@@ -53,10 +57,28 @@ export default function WorkflowNodeCard({ data }: { data: WorkflowNodeCardData 
         <span className="shrink-0">{fileBadge.icon}</span>
         <span className="truncate">{fileBadge.label}</span>
       </div>
-      {data.runStatus === "success" && typeof data.outputCount === "number" && (
-        <div className="mt-1 whitespace-nowrap text-[11px] text-green-600">✓ {data.outputCount} 个产出文件</div>
+
+      {(data.codeAssetLabel || data.promptAssetLabel) && (
+        <div className="mt-1 flex flex-col gap-0.5 text-[10px] text-blue-700">
+          {data.codeAssetLabel && <div className="truncate">📎 Code: {data.codeAssetLabel}</div>}
+          {data.promptAssetLabel && <div className="truncate">📎 Prompt: {data.promptAssetLabel}</div>}
+        </div>
       )}
-      {data.runStatus === "failed" && <div className="mt-1 whitespace-nowrap text-[11px] text-red-600">✗ 执行失败</div>}
+
+      {data.runStatus === "success" && data.outputFileNames && (
+        <div className="mt-1.5 border-t border-gray-100 pt-1">
+          <div className="text-[10px] text-green-600">✓ {t("Produced {count} files", { count: data.outputFileNames.length })}</div>
+          {data.outputFileNames.slice(0, 3).map((name) => (
+            <div key={name} className="truncate font-mono text-[10px] text-gray-500">
+              · {name}
+            </div>
+          ))}
+          {data.outputFileNames.length > 3 && (
+            <div className="text-[10px] text-gray-400">…{t("{count} more", { count: data.outputFileNames.length - 3 })}</div>
+          )}
+        </div>
+      )}
+      {data.runStatus === "failed" && <div className="mt-1 whitespace-nowrap text-[11px] text-red-600">✗ {t("Execution failed")}</div>}
       <Handle type="source" position={Position.Right} />
     </div>
   );

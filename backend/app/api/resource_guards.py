@@ -19,7 +19,7 @@ def get_workflow_or_404(db: Session, project_id: uuid.UUID, workflow_id: uuid.UU
         select(Workflow).where(Workflow.id == workflow_id, Workflow.project_id == project_id)
     ).scalar_one_or_none()
     if workflow is None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="工作流不存在")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Workflow not found")
     return workflow
 
 
@@ -28,5 +28,5 @@ def get_node_or_404(db: Session, workflow_id: uuid.UUID, node_id: uuid.UUID) -> 
         select(WorkflowNode).where(WorkflowNode.id == node_id, WorkflowNode.workflow_id == workflow_id)
     ).scalar_one_or_none()
     if node is None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="节点不存在")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Node not found")
     return node

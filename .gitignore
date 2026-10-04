@@ -17,3 +17,6 @@ frontend/vite.config.d.ts
 
 # OS
 .DS_Store
+
+# 根目录 .env（docker-compose 读取，放 API Key）
+.env

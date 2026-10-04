@@ -34,10 +34,10 @@ def _to_host_path(worker_local_path: str) -> str:
     """
     if not settings.host_sandbox_tmp_dir:
         raise SandboxExecutionError(
-            "未配置 HOST_SANDBOX_TMP_DIR，无法将 worker 容器内的临时路径翻译为宿主机路径"
+            "HOST_SANDBOX_TMP_DIR is not configured, so the worker container's temp path cannot be translated to a host path"
         )
     if not worker_local_path.startswith(settings.sandbox_tmp_dir):
-        raise SandboxExecutionError(f"临时文件路径 {worker_local_path} 不在共享挂载目录下")
+        raise SandboxExecutionError(f"Temp file path {worker_local_path} is not under the shared mount directory")
     suffix = worker_local_path[len(settings.sandbox_tmp_dir):]
     return settings.host_sandbox_tmp_dir.rstrip("/") + suffix
 
@@ -107,10 +107,10 @@ def run_node_sandbox(
                 exit_code = result.get("StatusCode", 1)
             except Exception as exc:
                 container.kill()
-                raise SandboxExecutionError(f"节点执行超时（超过 {timeout_seconds} 秒），已强制终止") from exc
+                raise SandboxExecutionError(f"Node execution timed out (exceeded {timeout_seconds} seconds) and was terminated") from exc
             logs = container.logs(stdout=True, stderr=True).decode("utf-8", errors="replace")
         except APIError as exc:
-            raise SandboxExecutionError(f"沙箱容器启动失败: {exc}") from exc
+            raise SandboxExecutionError(f"Failed to start sandbox container: {exc}") from exc
         finally:
             if container is not None:
                 try:
@@ -121,10 +121,10 @@ def run_node_sandbox(
         error_file = os.path.join(output_dir, "__error__.txt")
         if os.path.exists(error_file):
             with open(error_file, "r", encoding="utf-8") as f:
-                raise SandboxExecutionError(f.read() or "节点代码执行失败")
+                raise SandboxExecutionError(f.read() or "Node code execution failed")
 
         if exit_code != 0:
-            raise SandboxExecutionError(f"节点容器非正常退出（exit code {exit_code}）\n{logs[-4000:]}")
+            raise SandboxExecutionError(f"Node container exited abnormally (exit code {exit_code})\n{logs[-4000:]}")
 
         output_files = {}
         for fname in os.listdir(output_dir):

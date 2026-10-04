@@ -127,7 +127,7 @@ def reorder_nodes(
     nodes_by_id = {n.id: n for n in nodes}
 
     if set(payload.node_ids) != set(nodes_by_id.keys()):
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="节点列表与工作流当前节点不一致")
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="The node list does not match the workflow's current nodes")
 
     for index, node_id in enumerate(payload.node_ids):
         nodes_by_id[node_id].order_index = index
@@ -170,7 +170,7 @@ def restore_node_version(
         )
     ).scalar_one_or_none()
     if version is None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="历史版本不存在")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Version not found")
 
     # 回滚前先把"回滚前的当前状态"也存一份快照，这样回滚本身也是可撤销的
     next_version_no = db.execute(

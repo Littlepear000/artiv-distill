@@ -29,7 +29,7 @@ def complete(payload: LlmCompleteRequest, x_sandbox_token: str = Header(default=
     if not settings.anthropic_api_key:
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-            detail="未配置 ANTHROPIC_API_KEY，无法调用 LLM。请在 backend/.env 中设置后重启服务。",
+            detail="ANTHROPIC_API_KEY is not configured, so the LLM cannot be called. Set it in backend/.env and restart the service.",
         )
 
     client = anthropic.Anthropic(api_key=settings.anthropic_api_key)

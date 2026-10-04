@@ -1,6 +1,7 @@
 import { ChangeEvent, FormEvent, useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import apiClient from "../api/client";
+import { useI18n } from "../i18n";
 
 interface RunSummary {
   id: string;
@@ -12,10 +13,10 @@ interface RunSummary {
 }
 
 const STATUS_LABEL: Record<RunSummary["status"], string> = {
-  pending: "等待中",
-  running: "执行中",
-  success: "成功",
-  failed: "失败",
+  pending: "Pending",
+  running: "Running",
+  success: "Succeeded",
+  failed: "Failed",
 };
 
 const STATUS_COLOR: Record<RunSummary["status"], string> = {
@@ -26,6 +27,8 @@ const STATUS_COLOR: Record<RunSummary["status"], string> = {
 };
 
 export default function RunHistoryPage() {
+  const { t, lang } = useI18n();
+  const locale = lang === "zh" ? "zh-CN" : "en-US";
   const { projectId, workflowId } = useParams<{ projectId: string; workflowId: string }>();
   const [runs, setRuns] = useState<RunSummary[]>([]);
   const [files, setFiles] = useState<FileList | null>(null);
@@ -64,7 +67,7 @@ export default function RunHistoryPage() {
       if (input) input.value = "";
       await loadRuns();
     } catch {
-      setError("上传失败，请确认选择的都是 PDF 文件");
+      setError(t("Upload failed. Make sure all selected files are PDFs"));
     } finally {
       setUploading(false);
     }
@@ -73,12 +76,12 @@ export default function RunHistoryPage() {
   return (
     <div className="mx-auto mt-10 max-w-3xl px-4">
       <Link to={`/projects/${projectId}/workflows/${workflowId}`} className="whitespace-nowrap text-sm text-slate-600 underline">
-        ← 返回工作流编辑器
+        {t("← Back to workflow editor")}
       </Link>
-      <h1 className="page-title mb-6 mt-2 text-xl">运行历史</h1>
+      <h1 className="page-title mb-6 mt-2 text-xl">{t("Run history")}</h1>
 
       <form onSubmit={handleSubmit} className="mb-8 rounded border border-gray-200 p-4">
-        <label className="mb-2 block text-sm font-medium text-gray-700">上传 PDF 文件并触发一次运行</label>
+        <label className="mb-2 block text-sm font-medium text-gray-700">{t("Upload PDF files and trigger a run")}</label>
         <div className="flex flex-wrap items-center gap-3">
           <input id="pdf-file-input" type="file" accept="application/pdf" multiple onChange={handleFileChange} className="text-sm" />
           <button
@@ -86,7 +89,7 @@ export default function RunHistoryPage() {
             disabled={uploading || !files || files.length === 0}
             className="whitespace-nowrap rounded bg-slate-800 px-4 py-2 text-sm text-white hover:bg-slate-700 disabled:opacity-50"
           >
-            {uploading ? "上传中…" : "上传并运行"}
+            {uploading ? t("Uploading…") : t("Upload and run")}
           </button>
         </div>
         {error && <p className="mt-2 text-sm text-red-600">{error}</p>}
@@ -95,9 +98,9 @@ export default function RunHistoryPage() {
       <table className="w-full border-collapse text-sm">
         <thead>
           <tr className="border-b border-gray-200 text-left text-gray-500">
-            <th className="py-2">状态</th>
-            <th>创建时间</th>
-            <th>耗时</th>
+            <th className="py-2">{t("Status")}</th>
+            <th>{t("Created at")}</th>
+            <th>{t("Duration")}</th>
             <th></th>
           </tr>
         </thead>
@@ -109,12 +112,12 @@ export default function RunHistoryPage() {
                 : null;
             return (
               <tr key={r.id} className="border-b border-gray-100">
-                <td className={`py-2 font-medium ${STATUS_COLOR[r.status]}`}>{STATUS_LABEL[r.status]}</td>
-                <td>{new Date(r.created_at).toLocaleString()}</td>
+                <td className={`py-2 font-medium ${STATUS_COLOR[r.status]}`}>{t(STATUS_LABEL[r.status])}</td>
+                <td>{new Date(r.created_at).toLocaleString(locale)}</td>
                 <td>{durationMs !== null ? `${(durationMs / 1000).toFixed(1)}s` : "-"}</td>
                 <td>
                   <Link to={`${basePath}/${r.id}`} className="whitespace-nowrap text-slate-800 underline">
-                    查看详情
+                    {t("View details")}
                   </Link>
                 </td>
               </tr>
@@ -123,7 +126,7 @@ export default function RunHistoryPage() {
           {runs.length === 0 && (
             <tr>
               <td colSpan={4} className="py-4 text-center text-gray-400">
-                暂无运行记录
+                {t("No runs yet")}
               </td>
             </tr>
           )}

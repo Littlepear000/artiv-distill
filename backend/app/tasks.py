@@ -1,3 +1,5 @@
+import json
+import mimetypes
 import time
 import uuid
 from datetime import datetime, timezone
@@ -10,8 +12,40 @@ from app.models.file_record import FileRecord, FileSource
 from app.models.node_run import NodeRun
 from app.models.workflow_node import WorkflowNode
 from app.models.workflow_run import RunStatus, WorkflowRun
+from app.services.report_values import ingest_parse_results
 from app.sandbox import SandboxExecutionError, run_node_sandbox
 from app.storage import build_storage_key, download_bytes, upload_bytes
+
+
+REPORT_RESULTS_FILENAME = "report_results.json"
+
+
+def _ingest_report_results(db, tenant_uuid: uuid.UUID, run: WorkflowRun, files: dict[str, bytes]) -> str | None:
+    """Ingest report_results.json produced by a node. Never raises; returns a log line or None."""
+    data = files.get(REPORT_RESULTS_FILENAME)
+    if data is None:
+        return None
+    try:
+        payload = json.loads(data.decode("utf-8"))
+        items = payload["items"]
+        if not isinstance(items, list):
+            raise ValueError('"items" must be a list')
+        with db.begin_nested():
+            result = ingest_parse_results(
+                db,
+                tenant_id=tenant_uuid,
+                project_id=run.project_id,
+                items=items,
+                note="workflow run",
+                run_id=run.id,
+                created_by=None,
+            )
+        return (
+            f"[report_results] {result['values_added']} value(s) added; "
+            f"unknown reports: {result['unknown_reports']}; unknown fields: {result['unknown_fields']}"
+        )
+    except Exception as exc:  # must never fail the run
+        return f"[report_results] Failed to ingest {REPORT_RESULTS_FILENAME}: {exc}"
 
 
 @celery_app.task(name="app.tasks.execute_workflow_run")
@@ -74,7 +108,8 @@ def execute_workflow_run(run_id: str, tenant_id: str) -> None:
             next_files: dict[str, bytes] = {}
             for name, data in output_files.items():
                 key = build_storage_key(tenant_uuid, run.project_id, "runs", str(run.id), "nodes", str(node.id), name)
-                upload_bytes(key, data)
+                content_type = mimetypes.guess_type(name)[0] or "application/octet-stream"
+                upload_bytes(key, data, content_type=content_type)
                 record = FileRecord(
                     tenant_id=tenant_uuid,
                     project_id=run.project_id,
@@ -82,6 +117,7 @@ def execute_workflow_run(run_id: str, tenant_id: str) -> None:
                     node_run_id=node_run.id,
                     storage_key=key,
                     original_filename=name,
+                    content_type=content_type,
                     size_bytes=len(data),
                     source=FileSource.NODE_OUTPUT,
                 )
@@ -89,6 +125,10 @@ def execute_workflow_run(run_id: str, tenant_id: str) -> None:
                 db.flush()
                 output_file_ids.append(str(record.id))
                 next_files[name] = data
+
+            ingest_note = _ingest_report_results(db, tenant_uuid, run, next_files)
+            if ingest_note:
+                logs = f"{logs or ''}\n{ingest_note}"
 
             node_run.status = RunStatus.SUCCESS
             node_run.output_file_ids = output_file_ids

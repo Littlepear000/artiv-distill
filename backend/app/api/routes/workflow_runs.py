@@ -48,10 +48,10 @@ def create_run(
     get_workflow_or_404(db, project_id, workflow_id)
 
     if not files:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="至少需要上传一个 PDF 文件")
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="At least one PDF file is required")
     for upload in files:
         if not upload.filename.lower().endswith(".pdf"):
-            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"{upload.filename} 不是 PDF 文件")
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"{upload.filename} is not a PDF file")
 
     run = WorkflowRun(
         id=uuid.uuid4(),
@@ -108,7 +108,7 @@ def get_run(
         select(WorkflowRun).where(WorkflowRun.id == run_id, WorkflowRun.workflow_id == workflow_id)
     ).scalar_one_or_none()
     if run is None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="运行记录不存在")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Run not found")
 
     input_files = [
         _to_file_info(f)
@@ -137,7 +137,7 @@ def get_run(
             NodeRunOut(
                 id=nr.id,
                 node_id=nr.node_id,
-                node_name=node_names.get(nr.node_id, "(已删除节点)"),
+                node_name=node_names.get(nr.node_id, "(deleted node)"),
                 order_index=nr.order_index,
                 status=nr.status.value,
                 duration_ms=nr.duration_ms,
@@ -175,13 +175,13 @@ def download_run_file(
         select(WorkflowRun).where(WorkflowRun.id == run_id, WorkflowRun.workflow_id == workflow_id)
     ).scalar_one_or_none()
     if run is None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="运行记录不存在")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Run not found")
 
     record = db.execute(
         select(FileRecord).where(FileRecord.id == file_id, FileRecord.workflow_run_id == run_id)
     ).scalar_one_or_none()
     if record is None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="文件不存在")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="File not found")
 
     data = download_bytes(record.storage_key)
     return StreamingResponse(

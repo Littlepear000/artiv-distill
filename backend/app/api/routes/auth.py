@@ -46,7 +46,7 @@ def login(payload: LoginRequest):
         user = auth_db.execute(select(User).where(User.email == payload.email)).scalar_one_or_none()
 
     if user is None or not user.is_active or not verify_password(payload.password, user.hashed_password):
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="邮箱或密码错误")
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Incorrect email or password")
 
     token = create_access_token(user.id, user.tenant_id, user.tenant_role.value)
     return TokenResponse(access_token=token)

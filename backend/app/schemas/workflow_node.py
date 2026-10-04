@@ -21,6 +21,10 @@ class NodeUpdate(BaseModel):
     code: str | None = None
     prompt: str | None = None
     position: NodePosition | None = None
+    code_asset_id: uuid.UUID | None = None
+    code_asset_version: int | None = None
+    prompt_asset_id: uuid.UUID | None = None
+    prompt_asset_version: int | None = None
 
 
 class NodeReorderRequest(BaseModel):
@@ -35,6 +39,10 @@ class NodeOut(BaseModel):
     prompt: str
     order_index: int
     position: NodePosition
+    code_asset_id: uuid.UUID | None
+    code_asset_version: int | None
+    prompt_asset_id: uuid.UUID | None
+    prompt_asset_version: int | None
     created_at: datetime
     updated_at: datetime
 

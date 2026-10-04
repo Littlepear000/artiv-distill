@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Navigate, useParams } from "react-router-dom";
 import apiClient from "../api/client";
+import { useI18n } from "../i18n";
 
 interface WorkflowRow {
   id: string;
@@ -13,6 +14,7 @@ interface WorkflowRow {
  * 有工作流就去最早创建的那个，一个都没有就自动建一个默认的，省得用户每次都要先建流程。
  */
 export default function ProjectDetailPage() {
+  const { t } = useI18n();
   const { projectId } = useParams<{ projectId: string }>();
   const [targetWorkflowId, setTargetWorkflowId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -33,10 +35,10 @@ export default function ProjectDetailPage() {
       }
 
       try {
-        const created = await apiClient.post<WorkflowRow>(`/projects/${projectId}/workflows`, { name: "主工作流" });
+        const created = await apiClient.post<WorkflowRow>(`/projects/${projectId}/workflows`, { name: t("Main workflow") });
         if (!cancelled) setTargetWorkflowId(created.data.id);
       } catch {
-        if (!cancelled) setError("这个项目还没有工作流，且你没有创建权限——请联系项目 Owner 或 Editor 创建一个");
+        if (!cancelled) setError(t("This project has no workflows and you do not have permission to create one. Ask a project Owner or Editor to create one"));
       }
     }
 
@@ -54,5 +56,5 @@ export default function ProjectDetailPage() {
     return <Navigate to={`/projects/${projectId}/workflows/${targetWorkflowId}`} replace />;
   }
 
-  return <div className="p-8 text-center text-gray-500">加载中…</div>;
+  return <div className="p-8 text-center text-gray-500">{t("Loading…")}</div>;
 }
