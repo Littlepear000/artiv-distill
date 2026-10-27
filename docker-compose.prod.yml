@@ -1,0 +1,122 @@
+# Production stack for the shared server (runs under the artiv-distill rootless Docker daemon).
+#
+#   docker compose -f docker-compose.prod.yml up -d --build
+#
+# Secrets and machine-specific values come from ./.env (never committed); see
+# deploy/.env.prod.example for the full list. Differences from docker-compose.yml:
+#   - no source-code bind mounts, no --reload: images are built from the tree
+#   - object storage is Aliyun OSS / any S3 endpoint from .env instead of LocalStack
+#   - the frontend is a static build served by nginx ("web"), which also proxies
+#     /api/* to the backend with the prefix stripped, so everything is one origin
+#   - only "web" publishes a port, on 127.0.0.1 — the shared nginx fronts it
+name: artiv-distill
+
+x-backend-env: &backend-env
+  DATABASE_URL: postgresql+psycopg2://pdf_app:${PDF_APP_PASSWORD:?}@postgres:5432/pdf_workflow
+  AUTH_DATABASE_URL: postgresql+psycopg2://pdf_app_auth:${PDF_APP_AUTH_PASSWORD:?}@postgres:5432/pdf_workflow
+  MIGRATION_DATABASE_URL: postgresql+psycopg2://postgres:${POSTGRES_PASSWORD:?}@postgres:5432/pdf_workflow
+  JWT_SECRET_KEY: ${JWT_SECRET_KEY:?}
+  REDIS_URL: redis://redis:6379/0
+  S3_ENDPOINT_URL: ${S3_ENDPOINT_URL:?}
+  S3_ACCESS_KEY: ${S3_ACCESS_KEY:?}
+  S3_SECRET_KEY: ${S3_SECRET_KEY:?}
+  S3_REGION: ${S3_REGION:?}
+  S3_BUCKET: ${S3_BUCKET:?}
+  S3_ADDRESSING_STYLE: ${S3_ADDRESSING_STYLE:-virtual}
+  S3_PUBLIC_ENDPOINT_URL: ${S3_PUBLIC_ENDPOINT_URL:-}
+  SANDBOX_IMAGE: pdf-workflow-sandbox:latest
+  SANDBOX_INTERNAL_TOKEN: ${SANDBOX_INTERNAL_TOKEN:?}
+  SANDBOX_NETWORK: pdf_workflow_sandbox_net
+  LLM_PROXY_URL: http://backend:8000/internal/llm/complete
+  CORS_ALLOW_ORIGINS: ${CORS_ALLOW_ORIGINS:-}
+
+services:
+  postgres:
+    image: postgres:16
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: pdf_workflow
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?}
+      PDF_APP_PASSWORD: ${PDF_APP_PASSWORD:?}
+      PDF_APP_AUTH_PASSWORD: ${PDF_APP_AUTH_PASSWORD:?}
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+      - ./deploy/db-init:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+
+  backend:
+    build:
+      context: ./backend
+      args:
+        PIP_INDEX_URL: ${PIP_INDEX_URL:-https://pypi.org/simple}
+    image: artiv-distill-backend
+    restart: unless-stopped
+    env_file:
+      - path: .env
+        required: false
+    environment: *backend-env
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    command: ["sh", "-c", "alembic upgrade head && exec uvicorn app.main:app --host 0.0.0.0 --port 8000 --workers 2 --root-path /api --proxy-headers --forwarded-allow-ips '*'"]
+    networks:
+      - default
+      - sandbox_net
+
+  worker:
+    # Same image as backend (built there); never pulled from a registry.
+    image: artiv-distill-backend
+    pull_policy: never
+    restart: unless-stopped
+    env_file:
+      - path: .env
+        required: false
+    environment:
+      <<: *backend-env
+      SANDBOX_TMP_DIR: /sandbox-tmp
+      HOST_SANDBOX_TMP_DIR: ${SANDBOX_TMP_HOST_DIR:?}
+    volumes:
+      - ${SANDBOX_TMP_HOST_DIR:?}:/sandbox-tmp
+      - ${DOCKER_SOCK:-/var/run/docker.sock}:/var/run/docker.sock
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_started
+      backend:
+        condition: service_started
+    command: ["celery", "-A", "app.celery_app", "worker", "--loglevel=info", "--concurrency=2"]
+
+  web:
+    build:
+      context: .
+      dockerfile: deploy/web/Dockerfile
+      args:
+        NPM_REGISTRY: ${NPM_REGISTRY:-https://registry.npmjs.org/}
+        VITE_API_BASE_URL: /api
+    image: artiv-distill-web
+    restart: unless-stopped
+    ports:
+      - "${WEB_BIND:-127.0.0.1:8012}:80"
+    depends_on:
+      backend:
+        condition: service_started
+
+networks:
+  sandbox_net:
+    name: pdf_workflow_sandbox_net
+    internal: true
+
+volumes:
+  pg_data:

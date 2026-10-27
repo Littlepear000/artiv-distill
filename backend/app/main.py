@@ -17,6 +17,7 @@ from app.api.routes import (
     workflow_runs,
     workflows,
 )
+from app.config import settings
 from app.storage import ensure_bucket_exists
 
 
@@ -30,7 +31,7 @@ app = FastAPI(title="ArtivDistill API", version="0.1.0", lifespan=lifespan)
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173"],
+    allow_origins=[origin.strip() for origin in settings.cors_allow_origins.split(",") if origin.strip()],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

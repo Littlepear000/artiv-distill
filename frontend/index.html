@@ -9,9 +9,12 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin />
+    <!-- 非阻塞加载：Google Fonts 不可达时不卡首屏渲染，字体回退到 PingFang -->
     <link
       href="https://fonts.googleapis.com/css2?family=Funnel+Sans:wght@400;500;600;700&display=swap"
       rel="stylesheet"
+      media="print"
+      onload="this.media='all'"
     />
     <link
       rel="preload"

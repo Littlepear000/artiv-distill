@@ -7,6 +7,8 @@ class Settings(BaseSettings):
     database_url: str = "postgresql+psycopg2://pdf_app:pdf_app_password@localhost:5432/pdf_workflow"
     auth_database_url: str = "postgresql+psycopg2://pdf_app_auth:pdf_app_auth_password@localhost:5432/pdf_workflow"
     jwt_secret_key: str = "change-me-to-a-random-secret"
+    # 允许跨域的前端地址，逗号分隔；生产环境前端和 API 同源（/api 前缀）时可留空
+    cors_allow_origins: str = "http://localhost:5173"
     jwt_algorithm: str = "HS256"
     access_token_expire_minutes: int = 480
 

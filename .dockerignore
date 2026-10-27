@@ -1,0 +1,9 @@
+.git
+backend
+db
+deploy/shared-nginx
+frontend/node_modules
+frontend/dist
+frontend/.env
+.env
+*.md
