@@ -47,14 +47,27 @@ def get_s3_public_client():
 
 def ensure_bucket_exists() -> None:
     client = get_s3_client()
+    log = logging.getLogger(__name__)
     try:
         client.head_bucket(Bucket=settings.s3_bucket)
-    except ClientError:
-        try:
-            client.create_bucket(Bucket=settings.s3_bucket)
-        except ClientError as exc:
-            # 生产环境（如 OSS 子账号无建桶权限）bucket 应事先建好，这里不阻止应用启动
-            logging.getLogger(__name__).warning("Bucket %s unavailable and could not be created: %s", settings.s3_bucket, exc)
+        return
+    except ClientError as head_exc:
+        probe_error = head_exc
+    # 阿里云 OSS 对只授了单个桶的 RAM 子账号，HeadBucket 会返回 403，但列对象是通的；
+    # 再探一次，探通就说明桶可用，不要误报也不要去建桶
+    try:
+        client.list_objects_v2(Bucket=settings.s3_bucket, MaxKeys=1)
+        return
+    except ClientError as list_exc:
+        probe_error = list_exc
+    try:
+        client.create_bucket(Bucket=settings.s3_bucket)
+    except ClientError as exc:
+        # 生产环境（如 OSS 子账号无建桶权限）bucket 应事先建好，这里不阻止应用启动
+        log.warning(
+            "Bucket %s unavailable (probe: %s) and could not be created: %s",
+            settings.s3_bucket, probe_error, exc,
+        )
 
 
 def build_storage_key(tenant_id: uuid.UUID, project_id: uuid.UUID, *parts: str) -> str:

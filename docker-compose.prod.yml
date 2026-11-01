@@ -42,6 +42,9 @@ services:
       PDF_APP_AUTH_PASSWORD: ${PDF_APP_AUTH_PASSWORD:?}
     volumes:
       - pg_data:/var/lib/postgresql/data
+      # Must be world-readable on the host (dir 755, files 644): under rootless Docker the
+      # container's postgres uid maps to a subuid that is not in the artiv-distill group,
+      # and the entrypoint runs `ls /docker-entrypoint-initdb.d/` before initdb (exit code 2).
       - ./deploy/db-init:/docker-entrypoint-initdb.d:ro
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres"]
