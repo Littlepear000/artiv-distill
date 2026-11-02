@@ -14,7 +14,7 @@ export interface ProjectOutletContext {
 export default function ProjectLayout() {
   const { projectId, workflowId } = useParams<{ projectId: string; workflowId?: string }>();
   const location = useLocation();
-  const { currentUser, logout } = useAuth();
+  const { currentUser, isGuest, logout } = useAuth();
   const { t } = useI18n();
   const [project, setProject] = useState<ProjectInfo | null>(null);
 
@@ -83,8 +83,8 @@ export default function ProjectLayout() {
                 {roleLabel || currentUser.email}
               </div>
             </div>
-            <button onClick={logout} title={t("Log out")} className="text-xs text-gray-400 hover:text-gray-700">
-              {t("Log out")}
+            <button onClick={logout} className="whitespace-nowrap text-xs text-gray-400 hover:text-gray-700">
+              {isGuest ? t("Exit preview") : t("Log out")}
             </button>
           </div>
         )}

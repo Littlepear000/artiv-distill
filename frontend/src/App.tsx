@@ -4,7 +4,7 @@ import ProjectLayout from "./components/ProjectLayout";
 import ProtectedRoute from "./components/ProtectedRoute";
 import AssetDetailPage from "./pages/AssetDetailPage";
 import AssetLibraryPage from "./pages/AssetLibraryPage";
-import LoginPage from "./pages/LoginPage";
+import HomePage from "./pages/HomePage";
 import ProjectDetailPage from "./pages/ProjectDetailPage";
 import ProjectMembersPage from "./pages/ProjectMembersPage";
 import ProjectSettingsPage from "./pages/ProjectSettingsPage";
@@ -25,7 +25,8 @@ export default function App() {
     <div className="min-h-screen bg-gray-50">
       <NavBar />
       <Routes>
-        <Route path="/login" element={<LoginPage />} />
+        <Route path="/" element={<HomePage />} />
+        <Route path="/login" element={<HomePage />} />
         <Route path="/signup-tenant" element={<SignupTenantPage />} />
 
         <Route element={<ProtectedRoute />}>
@@ -51,7 +52,7 @@ export default function App() {
           <Route path="/users" element={<UsersPage />} />
         </Route>
 
-        <Route path="*" element={<Navigate to="/projects" replace />} />
+        <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </div>
   );

@@ -1,0 +1,22 @@
+export default {
+  "PDF → structured data": "PDF → 结构化数据",
+  "Distill stacks of PDF reports into one table you can trust": "把成堆的 PDF 报告，提炼成一张可信的数据表",
+  "Build a workflow once, run it on every report, and review each extracted value before it lands.":
+    "工作流搭一次，所有报告都能跑，每个抽出来的值都先过目再入库。",
+  "Preview as guest": "以访客身份预览",
+  "Create a tenant": "注册租户",
+  "Collect reports": "收集报告",
+  "Upload PDFs or point at an OSS folder; each report keeps its source.": "上传 PDF 或指向 OSS 目录，每份报告都保留来源。",
+  "Run a workflow": "运行工作流",
+  "Chain Code and Prompt nodes; each node runs in an isolated sandbox.": "串起 Code 和 Prompt 节点，每个节点都在隔离沙箱里执行。",
+  "Review results": "审核结果",
+  "Every value keeps its history; snapshot, merge and export versions.": "每个值都有历史记录，版本可快照、合并、导出。",
+  "Extract text": "抽文本",
+  "LLM": "大模型",
+  "Build table": "成表",
+  "Report": "报告",
+  "Staff": "员工",
+  "Guest preview": "访客预览",
+  "Guest preview is read-only. Create a tenant to make changes.": "访客预览是只读的，注册租户后才能修改",
+  "Exit preview": "退出预览",
+};
